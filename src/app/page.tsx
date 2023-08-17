@@ -24,7 +24,7 @@ export default function Home() {
     })
 
     provider.on('display_uri', (uri: string) => {
-      console.debug(uri)
+      // When the URI is requested, we forward it to the extension.
       window.postMessage({ type: 'createWalletConnectConnection', uri }, "*");
     })
 
@@ -35,6 +35,7 @@ export default function Home() {
     // Listen for messages from the extension.
     window.addEventListener('message', (event) => {
       if (event?.data === 'installed') {
+        // If we get a message from the extension, then it is installed.
         setInstalled(true)
       }
     })
