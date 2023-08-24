@@ -1,21 +1,17 @@
 "use client"
 import { useEffect, useState } from 'react'
 import styles from './page.module.css'
-
-import { EthereumProvider } from '@walletconnect/ethereum-provider'
+import { checkIfSukuWalletIsInstalled, connectWithSukuWallet } from 'suku-connect-button'
+import Provider from '@walletconnect/ethereum-provider'
 
 export default function Home() {
   const [installed, setInstalled] = useState(false)
+  const [connected, setConnected] = useState(false)
+  const [userAddress, setUserAddress] = useState('')
+  const [chain, setChain] = useState(0)
 
   const onClick = async () => {
-    // Check if Suku Wallet is Installed. If not, redirect to the Chrome Web Store.
-    if (!installed) {
-      window.open(`https://chrome.google.com/webstore/detail/suku-wallet/fopmedgnkfpebgllppeddmmochcookhc`, '_blank')
-      return
-    }
-
-    // If installed, Create the Wallet Connect Session.
-    const provider = await EthereumProvider.init({
+    const sukuProvider = await Provider.init({
       projectId: 'eebf7eb6eaef98191d4e3fae949c81de', // REQUIRED your projectId
       chains: [1], // REQUIRED chain ids
       showQrModal: false, // REQUIRED set to "true" to use @walletconnect/modal
@@ -23,29 +19,43 @@ export default function Home() {
       events: ['display_uri'], // REQUIRED ethereum events
     })
 
-    provider.on('display_uri', (uri: string) => {
-      // When the URI is requested, we forward it to the extension.
-      window.postMessage({ type: 'createWalletConnectConnection', uri }, "*");
+    sukuProvider.on('connect', (payload) => {
+      console.log(payload)
+      setConnected(true)
+      setUserAddress(sukuProvider.accounts[0])
+      setChain(sukuProvider.chainId)
     })
 
-    await provider.connect()
+    await connectWithSukuWallet(sukuProvider)
+    console.debug(sukuProvider)
+
+    if (!sukuProvider) return
   }
 
   useEffect(() => {
-    // Listen for messages from the extension.
-    window.addEventListener('message', (event) => {
-      if (event?.data === 'installed') {
-        // If we get a message from the extension, then it is installed.
-        setInstalled(true)
-      }
-    })
+    const checkInstalled = async () => {
+      const installed = await checkIfSukuWalletIsInstalled()
+      setInstalled(installed)
+    }
 
-    // Check if Suku Wallet is installed.
-    window.postMessage('sukuWalletInstalled', "*");
+    checkInstalled()
   }, [])
 
   return (
     <main className={styles.main}>
+      <h1>Information</h1>
+      <div>
+        <h2>Is Installed: {installed ? 'yes' : 'no'}</h2>
+        <h2>Is Connected: {connected ? 'yes' : 'no'}</h2>
+        {
+          connected && (
+            <>
+              <h2>User Address: {userAddress}</h2>
+              <h2>Chain Id: {chain}</h2>
+            </>
+          )
+        }
+      </div>
       <button onClick={onClick} className={styles.sukuButton}>Suku Connect</button>
     </main>
   )
