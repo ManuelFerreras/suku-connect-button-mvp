@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from 'react'
 import styles from './page.module.css'
-import { checkIfSukuWalletIsInstalled, connectWithSukuWallet, openInstalationPage } from 'suku-connect-button'
+import { checkIfSukuWalletIsInstalled, connectWithSukuWallet, openInstallationPage } from 'suku-connect-button'
 import Provider from '@walletconnect/ethereum-provider'
 
 export default function Home() {
@@ -11,7 +11,7 @@ export default function Home() {
   const [chain, setChain] = useState(0)
 
   const redirect = async () => {
-    openInstalationPage()
+    openInstallationPage()
   }
 
   const onClick = async () => {
